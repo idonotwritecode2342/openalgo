@@ -208,7 +208,17 @@ def init_latency_db():
     db_path = LATENCY_DATABASE_URL.replace('sqlite:///', '')
     db_dir = os.path.dirname(db_path)
     if db_dir:
-        os.makedirs(db_dir, exist_ok=True)
+        try:
+            os.makedirs(db_dir, exist_ok=True)
+        except PermissionError:
+            logger.warning(f"Permission denied creating {db_dir}; falling back to /tmp for latency DB")
+            # Fallback to tmp if persistent path not writable
+            fallback = os.getenv('LATENCY_DATABASE_URL', 'sqlite:///tmp/latency.db')
+            LATENCY_DATABASE_URL = fallback
+            db_path = LATENCY_DATABASE_URL.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
 
     from database.db_init_helper import init_db_with_logging
     init_db_with_logging(LatencyBase, latency_engine, "Latency DB", logger)
