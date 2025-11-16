@@ -4,7 +4,7 @@ echo "[OpenAlgo] Starting up..."
 
 # Try to create directories, but don't fail if they already exist or can't be created
 # This handles both mounted volumes and permission issues
-for dir in db log log/strategies strategies strategies/scripts keys; do
+for dir in db log log/strategies strategies strategies/scripts keys data data/db; do
     mkdir -p "$dir" 2>/dev/null || true
 done
 
