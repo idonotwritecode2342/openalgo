@@ -9,7 +9,11 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Get the database path from environment variable or use default
-DB_PATH = os.getenv('DATABASE_URL', 'sqlite:///db/openalgo.db')
+# Use a Railway-mounted volume for persistent storage if running there; otherwise keep local db/.
+default_db_path = 'sqlite:///db/openalgo.db'
+if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    default_db_path = 'sqlite:////data/db/openalgo.db'
+DB_PATH = os.getenv('DATABASE_URL', default_db_path)
 
 # Ensure the directory exists for file-based SQLite
 if DB_PATH.startswith('sqlite:///') and ':memory:' not in DB_PATH:

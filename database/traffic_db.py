@@ -12,7 +12,10 @@ from database.settings_db import get_security_settings
 logger = logging.getLogger(__name__)
 
 # Use a separate database for logs
-LOGS_DATABASE_URL = os.getenv('LOGS_DATABASE_URL', 'sqlite:///db/logs.db')
+default_logs = 'sqlite:///db/logs.db'
+if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    default_logs = 'sqlite:////data/db/logs.db'
+LOGS_DATABASE_URL = os.getenv('LOGS_DATABASE_URL', default_logs)
 
 # Conditionally create engine based on DB type
 if LOGS_DATABASE_URL and 'sqlite' in LOGS_DATABASE_URL:

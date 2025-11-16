@@ -19,7 +19,10 @@ load_dotenv()
 
 # Sandbox database URL - separate database for isolation
 # Get from environment variable or use default path in /db directory
-SANDBOX_DATABASE_URL = os.getenv('SANDBOX_DATABASE_URL', 'sqlite:///db/sandbox.db')
+default_sandbox = 'sqlite:///db/sandbox.db'
+if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    default_sandbox = 'sqlite:////data/db/sandbox.db'
+SANDBOX_DATABASE_URL = os.getenv('SANDBOX_DATABASE_URL', default_sandbox)
 
 # Conditionally create engine based on DB type
 if SANDBOX_DATABASE_URL and 'sqlite' in SANDBOX_DATABASE_URL:

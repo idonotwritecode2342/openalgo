@@ -10,7 +10,10 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 # Use a separate database for latency logs
-LATENCY_DATABASE_URL = os.getenv('LATENCY_DATABASE_URL', 'sqlite:///db/latency.db')
+default_latency = 'sqlite:///db/latency.db'
+if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    default_latency = 'sqlite:////data/db/latency.db'
+LATENCY_DATABASE_URL = os.getenv('LATENCY_DATABASE_URL', default_latency)
 
 # Conditionally create engine based on DB type
 if LATENCY_DATABASE_URL and 'sqlite' in LATENCY_DATABASE_URL:

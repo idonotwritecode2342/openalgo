@@ -20,7 +20,13 @@ from utils.logging import get_logger
 logger = get_logger(__name__)
 
 # Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///db/telegram.db')
+# Use a persistent path on Railway when running in that environment. Locally we default to the
+# project `db/` directory so developers' databases don't interfere.
+default_telegram = 'sqlite:///db/telegram.db'
+if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
+    # Absolute path on a Railway bind-mounted volume
+    default_telegram = 'sqlite:////data/db/telegram.db'
+DATABASE_URL = os.getenv('DATABASE_URL', default_telegram)
 if DATABASE_URL.startswith('sqlite:///') and ':memory:' not in DATABASE_URL:
     # Ensure the directory exists for file-based SQLite, but not for in-memory
     db_path = DATABASE_URL.replace('sqlite:///', '')
