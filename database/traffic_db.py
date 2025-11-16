@@ -15,7 +15,22 @@ logger = logging.getLogger(__name__)
 default_logs = 'sqlite:///db/logs.db'
 if os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'):
     default_logs = 'sqlite:////data/db/logs.db'
+# Resolve directory and create it before creating engine; fallback to /tmp if /data is not writable
 LOGS_DATABASE_URL = os.getenv('LOGS_DATABASE_URL', default_logs)
+if LOGS_DATABASE_URL.startswith('sqlite:///') and ':memory:' not in LOGS_DATABASE_URL:
+    db_path = LOGS_DATABASE_URL.replace('sqlite:///', '')
+    db_dir = os.path.dirname(db_path)
+    if db_dir:
+        try:
+            os.makedirs(db_dir, exist_ok=True)
+        except PermissionError:
+            logger.warning(f"Permission denied creating {db_dir}; falling back to /tmp for logs DB")
+            # Use /tmp for ephemeral logs if we can't create the persistent folder
+            LOGS_DATABASE_URL = os.getenv('LOGS_DATABASE_URL', 'sqlite:///tmp/logs.db')
+            db_path = LOGS_DATABASE_URL.replace('sqlite:///', '')
+            db_dir = os.path.dirname(db_path)
+            if db_dir:
+                os.makedirs(db_dir, exist_ok=True)
 
 # Conditionally create engine based on DB type
 if LOGS_DATABASE_URL and 'sqlite' in LOGS_DATABASE_URL:
