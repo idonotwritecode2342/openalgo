@@ -11,8 +11,14 @@ logger = logging.getLogger(__name__)
 # Get the database path from environment variable or use default
 DB_PATH = os.getenv('DATABASE_URL', 'sqlite:///db/openalgo.db')
 
-# Ensure the directory exists
-os.makedirs(os.path.dirname(DB_PATH.replace('sqlite:///', '')), exist_ok=True)
+# Ensure the directory exists for file-based SQLite
+if DB_PATH.startswith('sqlite:///') and ':memory:' not in DB_PATH:
+    db_path = DB_PATH.replace('sqlite:///', '')
+    if os.path.dirname(db_path):
+        try:
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        except PermissionError:
+            logger.warning(f"Permission denied when creating directory for {db_path}. Ensure the directory exists and is writable.")
 
 # Create the engine and session
 # Conditionally create engine based on DB type

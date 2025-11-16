@@ -25,7 +25,10 @@ if DATABASE_URL.startswith('sqlite:///') and ':memory:' not in DATABASE_URL:
     # Ensure the directory exists for file-based SQLite, but not for in-memory
     db_path = DATABASE_URL.replace('sqlite:///', '')
     if os.path.dirname(db_path): # Only create if a directory is specified
-        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        try:
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        except PermissionError:
+            logger.warning(f"Permission denied when creating directory for {db_path}. Ensure the directory exists and is writable.")
 
 # Encryption setup for API keys
 TELEGRAM_KEY_SALT = os.getenv('TELEGRAM_KEY_SALT', 'telegram-openalgo-salt').encode()
