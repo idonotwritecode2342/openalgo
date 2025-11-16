@@ -109,21 +109,27 @@ def check_env_version_compatibility():
     return True
 
 def load_and_check_env_variables():
-    # First, check version compatibility
-    if not check_env_version_compatibility():
-        sys.exit(1)
+    # Detect if running in Railway environment
+    is_railway = bool(os.getenv('RAILWAY_ENVIRONMENT') or os.getenv('RAILWAY_PUBLIC_DOMAIN'))
     
     # Define the path to the .env file in the main application path
     env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
-
-    # Check if the .env file exists
-    if not os.path.exists(env_path):
+    
+    if os.path.exists(env_path):
+        # Local development: load from .env file and check version
+        print("📄 Loading configuration from .env file")
+        load_dotenv(dotenv_path=env_path, override=True)
+        if not check_env_version_compatibility():
+            sys.exit(1)
+    elif is_railway:
+        # Railway environment: use OS environment variables
+        print("☁️  Railway environment detected — using platform environment variables")
+        print("ℹ️  Skipping .env file requirement and version checks")
+    else:
+        # Local environment without .env file
         print("Error: .env file not found at the expected location.")
         print("\nSolution: Copy .sample.env to .env and configure your settings")
         sys.exit(1)
-
-    # Load environment variables from the .env file with override=True to ensure values are updated
-    load_dotenv(dotenv_path=env_path, override=True)
 
     # Define the required environment variables
     required_vars = [
