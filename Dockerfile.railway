@@ -1,0 +1,31 @@
+FROM python:3.12-slim-bullseye
+
+# Small production image for Railway that prepares .env and uses start.sh
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl build-essential bash && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Install runtime deps with pip from requirements.txt for simplicity
+COPY pyproject.toml .
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt && rm -rf /root/.cache
+
+# Copy code
+COPY . .
+
+# Create data dir on container and set permissions
+RUN mkdir -p /data/db && mkdir -p /app/db && chown -R root:root /data /app
+
+# Copy entrypoint and make executable
+COPY docker/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    TZ=Asia/Kolkata
+
+EXPOSE 5000
+CMD ["/app/docker-entrypoint.sh"]
